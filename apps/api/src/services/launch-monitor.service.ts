@@ -20,6 +20,12 @@ let isRunning = false;
 const scanQueue: Array<{ mint: string; platform: string; timestamp: number }> = [];
 let isProcessingQueue = false;
 
+// Safety caps to prevent runaway resource usage
+const MAX_QUEUE_SIZE = 100;        // Never queue more than 100 at once
+const MAX_SCANS_PER_HOUR = 500;   // Max auto-scans per hour
+let scansThisHour = 0;
+let hourResetAt = Date.now() + 3_600_000;
+
 // ─── Queue processor ───
 
 async function processQueue(): Promise<void> {
@@ -41,10 +47,24 @@ async function processQueue(): Promise<void> {
     // Skip obviously invalid mints
     if (!item.mint || item.mint === 'unknown' || item.mint.length < 32) continue;
 
+    // Reset hourly counter
+    if (Date.now() > hourResetAt) {
+      scansThisHour = 0;
+      hourResetAt = Date.now() + 3_600_000;
+    }
+
+    // Enforce hourly cap
+    if (scansThisHour >= MAX_SCANS_PER_HOUR) {
+      console.log(`[LaunchMonitor] Hourly cap (${MAX_SCANS_PER_HOUR}) reached, pausing until next hour`);
+      scanQueue.length = 0; // clear queue
+      break;
+    }
+
     try {
       console.log(`[LaunchMonitor] Auto-scanning new ${item.platform} token: ${item.mint}`);
       const scan = await runInstantScan(item.mint);
       saveLaunchSignals(scan);
+      scansThisHour++;
       console.log(`[LaunchMonitor] Saved signals for ${item.mint} — score: ${scan.overallScore} (${scan.riskLevel})`);
     } catch (err) {
       // Many new tokens fail to scan (not yet indexed) — that's fine
@@ -65,6 +85,9 @@ export function startLaunchMonitor(): void {
 
   stopMonitor = addPairListener((event) => {
     if (event.tokenMint && event.tokenMint !== 'unknown') {
+      // Don't let queue grow unbounded
+      if (scanQueue.length >= MAX_QUEUE_SIZE) return;
+
       scanQueue.push({
         mint: event.tokenMint,
         platform: event.platform,
