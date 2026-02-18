@@ -29,4 +29,5 @@ COPY apps/api ./apps/api
 RUN mkdir -p /app/apps/api/data
 
 EXPOSE 3001
-CMD ["node", "--import", "tsx/esm", "apps/api/src/index.ts"]
+WORKDIR /app/apps/api
+CMD ["node", "--import", "tsx/esm", "src/index.ts"]
