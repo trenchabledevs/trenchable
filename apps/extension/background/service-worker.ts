@@ -118,6 +118,30 @@ function extractMintFromUrl(url: string): string | null {
       return match ? match[1] : null;
     }
 
+    // Photon: /r/<MINT> or /#r@<MINT>
+    if (parsed.hostname === PLATFORM_PATTERNS.photon.domain) {
+      const pathMatch = parsed.pathname.match(PLATFORM_PATTERNS.photon.pathRegex);
+      if (pathMatch) return pathMatch[1];
+      const hashMatch = (parsed.hash + url).match(PLATFORM_PATTERNS.photon.hashRegex);
+      return hashMatch ? hashMatch[1] : null;
+    }
+
+    // BullX: /terminal?chainId=solana&address=<MINT>
+    if (parsed.hostname === PLATFORM_PATTERNS.bullx.domain) {
+      const address = parsed.searchParams.get(PLATFORM_PATTERNS.bullx.paramKey);
+      const chainId = parsed.searchParams.get('chainId');
+      if (address && (!chainId || chainId === 'solana') && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
+        return address;
+      }
+      return null;
+    }
+
+    // DexScreener: /solana/<MINT>
+    if (parsed.hostname === PLATFORM_PATTERNS.dexscreener.domain) {
+      const match = parsed.pathname.match(PLATFORM_PATTERNS.dexscreener.pathRegex);
+      return match ? match[1] : null;
+    }
+
     return null;
   } catch {
     return null;

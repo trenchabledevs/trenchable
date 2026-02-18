@@ -1,7 +1,7 @@
 // API Configuration
 // Development: 'http://localhost:3001'
-// Production:  'https://api.YOUR_DOMAIN.com'
-export const API_BASE_URL = 'http://localhost:3001';
+// Production:  'https://api.trenchable.gold'
+export const API_BASE_URL = 'https://api.trenchable.gold';
 
 // Cache TTLs in milliseconds
 export const INSTANT_CACHE_TTL = 30_000;  // 30 seconds
@@ -22,6 +22,22 @@ export const PLATFORM_PATTERNS = {
   pumpfun: {
     domain: 'pump.fun',
     pathRegex: /^(?:\/coin)?\/([1-9A-HJ-NP-Za-km-z]{32,44})(?:[?#/].*)?$/,
+  },
+  // Photon: photon-sol.tinyastro.io/#r@<MINT> or /r/<MINT>
+  photon: {
+    domain: 'photon-sol.tinyastro.io',
+    pathRegex: /^\/(?:r|en)\/([1-9A-HJ-NP-Za-km-z]{32,44})(?:[?#/].*)?$/,
+    hashRegex: /[#@]r@([1-9A-HJ-NP-Za-km-z]{32,44})/,
+  },
+  // BullX: bullx.io/terminal?chainId=solana&address=<MINT>
+  bullx: {
+    domain: 'bullx.io',
+    paramKey: 'address',
+  },
+  // DexScreener: dexscreener.com/solana/<PAIR_OR_MINT>
+  dexscreener: {
+    domain: 'dexscreener.com',
+    pathRegex: /^\/solana\/([1-9A-HJ-NP-Za-km-z]{32,44})(?:[?#/].*)?$/,
   },
 } as const;
 

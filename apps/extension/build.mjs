@@ -61,6 +61,21 @@ const entryPoints = [
     format: 'iife',
   },
   {
+    entryPoints: [join(__dirname, 'content/photon.ts')],
+    outfile: join(dist, 'content/photon.js'),
+    format: 'iife',
+  },
+  {
+    entryPoints: [join(__dirname, 'content/bullx.ts')],
+    outfile: join(dist, 'content/bullx.js'),
+    format: 'iife',
+  },
+  {
+    entryPoints: [join(__dirname, 'content/dexscreener.ts')],
+    outfile: join(dist, 'content/dexscreener.js'),
+    format: 'iife',
+  },
+  {
     entryPoints: [join(__dirname, 'popup/popup.ts')],
     outfile: join(dist, 'popup/popup.js'),
     format: 'iife',

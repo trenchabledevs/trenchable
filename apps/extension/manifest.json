@@ -1,16 +1,20 @@
 {
   "manifest_version": 3,
   "name": "Trenchable",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Instant Solana memecoin safety scanner — scan before you ape",
   "permissions": [
     "storage",
     "activeTab",
-    "alarms"
+    "alarms",
+    "tabs"
   ],
   "host_permissions": [
     "https://axiom.trade/*",
-    "https://pump.fun/*"
+    "https://pump.fun/*",
+    "https://photon-sol.tinyastro.io/*",
+    "https://bullx.io/*",
+    "https://dexscreener.com/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
@@ -24,6 +28,21 @@
     {
       "matches": ["https://pump.fun/*"],
       "js": ["content/pumpfun.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://photon-sol.tinyastro.io/*"],
+      "js": ["content/photon.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://bullx.io/*"],
+      "js": ["content/bullx.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://dexscreener.com/solana/*"],
+      "js": ["content/dexscreener.js"],
       "run_at": "document_idle"
     }
   ],
