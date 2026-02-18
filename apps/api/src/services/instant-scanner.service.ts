@@ -14,6 +14,7 @@ import { getConnection } from '../config/rpc.js';
 import { MemoryCache } from '../cache/memory-cache.js';
 import { getRiskLevel } from '../scoring/risk-engine.js';
 import { saveScanToHistory } from '../db/history.js';
+import { saveLaunchSignals } from './token-tracker.service.js';
 
 // External API clients
 import { getAsset, extractTokenMeta, type HeliusAsset } from './external/helius.js';
@@ -148,6 +149,9 @@ export async function runInstantScan(tokenMintStr: string): Promise<ExtendedScan
 
   // Save to history (non-blocking)
   try { saveScanToHistory(response); } catch { /* ignore */ }
+
+  // Save launch signals for MC prediction training (non-blocking)
+  try { saveLaunchSignals(response); } catch { /* ignore */ }
 
   return response;
 }

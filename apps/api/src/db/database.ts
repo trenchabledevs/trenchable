@@ -54,5 +54,50 @@ function initTables(db: Database.Database) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_watchlist_mint ON watchlist(token_mint);
+
+    -- ─── MC Prediction Training Data ───────────────────────────────────
+
+    -- Signals captured at launch time for each token we auto-monitor
+    CREATE TABLE IF NOT EXISTS token_launch_signals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token_mint TEXT NOT NULL UNIQUE,
+      token_name TEXT,
+      token_symbol TEXT,
+      platform TEXT NOT NULL,
+      scanned_at INTEGER NOT NULL,
+      launch_mc REAL,
+      launch_liquidity REAL,
+      launch_price REAL,
+      risk_score INTEGER,
+      risk_level TEXT,
+      lp_locked_pct REAL,
+      lp_burned_pct REAL,
+      top_holder_pct REAL,
+      holder_count INTEGER,
+      dev_wallet_pct REAL,
+      bundle_pct REAL,
+      buy_tax REAL,
+      sell_tax REAL,
+      mint_revoked INTEGER,
+      freeze_revoked INTEGER,
+      bonding_curve_pct REAL,
+      has_socials INTEGER,
+      rugcheck_score INTEGER,
+      insiders_detected INTEGER,
+      mc_1h REAL,
+      mc_6h REAL,
+      mc_24h REAL,
+      price_1h REAL,
+      price_6h REAL,
+      price_24h REAL,
+      rug_detected INTEGER DEFAULT 0,
+      rug_time_minutes INTEGER,
+      outcome_checked_at INTEGER
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_launch_signals_mint ON token_launch_signals(token_mint);
+    CREATE INDEX IF NOT EXISTS idx_launch_signals_platform ON token_launch_signals(platform);
+    CREATE INDEX IF NOT EXISTS idx_launch_signals_scanned ON token_launch_signals(scanned_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_launch_signals_outcome ON token_launch_signals(outcome_checked_at);
   `);
 }
