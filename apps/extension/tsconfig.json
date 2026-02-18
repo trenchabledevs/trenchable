@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "noEmit": true,
+    "lib": ["ES2022", "DOM"],
+    "types": ["chrome"]
+  },
+  "include": [
+    "background/**/*.ts",
+    "content/**/*.ts",
+    "popup/**/*.ts",
+    "lib/**/*.ts"
+  ]
+}

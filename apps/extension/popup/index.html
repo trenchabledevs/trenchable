@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trenchable</title>
+  <link rel="stylesheet" href="../styles/popup.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">T</span>
+        <span class="logo-text">Trenchable</span>
+      </div>
+      <span class="version">v0.1</span>
+    </header>
+
+    <!-- Search -->
+    <div class="search-section">
+      <input type="text" id="mint-input" placeholder="Paste token address..." spellcheck="false" autocomplete="off" />
+      <button id="scan-btn">Scan</button>
+    </div>
+
+    <!-- Status -->
+    <div id="status" class="status hidden"></div>
+
+    <!-- Result -->
+    <div id="result" class="result hidden">
+      <!-- Token info -->
+      <div class="token-header">
+        <img id="token-image" class="token-image" src="" alt="" />
+        <div class="token-info">
+          <div class="token-name">
+            <span id="token-name"></span>
+            <span id="token-symbol" class="token-symbol"></span>
+          </div>
+          <div class="token-platform" id="token-platform"></div>
+        </div>
+        <div class="risk-badge" id="risk-badge">
+          <span id="risk-score" class="risk-score"></span>
+        </div>
+      </div>
+
+      <!-- Risk level bar -->
+      <div class="risk-level-bar">
+        <div class="risk-level-fill" id="risk-fill"></div>
+      </div>
+      <div class="risk-level-row">
+        <span class="risk-level-label" id="risk-level-label"></span>
+        <span class="scan-mode" id="scan-mode"></span>
+        <span class="scan-time" id="scan-time"></span>
+      </div>
+
+      <!-- Market data -->
+      <div class="market-grid hidden" id="market-grid">
+        <div class="market-item">
+          <span class="market-label">Price</span>
+          <span class="market-value" id="market-price">&mdash;</span>
+        </div>
+        <div class="market-item">
+          <span class="market-label">Market Cap</span>
+          <span class="market-value" id="market-mc">&mdash;</span>
+        </div>
+        <div class="market-item">
+          <span class="market-label">Liquidity</span>
+          <span class="market-value" id="market-liq">&mdash;</span>
+        </div>
+        <div class="market-item">
+          <span class="market-label">24h Change</span>
+          <span class="market-value" id="market-change">&mdash;</span>
+        </div>
+      </div>
+
+      <!-- MC Prediction -->
+      <div class="mc-prediction hidden" id="mc-prediction">
+        <div class="section-title">MC Prediction</div>
+        <div class="bc-progress hidden" id="bc-progress">
+          <span class="bc-label">Bonding Curve</span>
+          <div class="bc-bar">
+            <div class="bc-fill" id="bc-fill"></div>
+          </div>
+          <span class="bc-pct" id="bc-pct">0%</span>
+        </div>
+        <div class="mc-range" id="mc-range">
+          <span class="mc-range-label">Fair Value Range</span>
+          <span class="mc-range-value" id="mc-range-value">&mdash;</span>
+        </div>
+        <div class="mc-summary" id="mc-summary"></div>
+        <div class="mc-confidence" id="mc-confidence">
+          <span class="confidence-dot"></span>
+          <span id="mc-confidence-text"></span>
+        </div>
+      </div>
+
+      <!-- Risk checks -->
+      <div class="checks-section">
+        <div class="section-title">Risk Checks</div>
+        <div id="checks-list" class="checks-list"></div>
+      </div>
+
+      <!-- Deep scan button -->
+      <button id="deep-scan-btn" class="deep-scan-btn hidden">Run Deep Scan</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

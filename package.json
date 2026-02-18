@@ -1,0 +1,18 @@
+{
+  "name": "trenchable",
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "bufferutil", "utf-8-validate", "bigint-buffer", "better-sqlite3"]
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.3"
+  }
+}
