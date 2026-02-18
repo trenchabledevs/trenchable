@@ -10,8 +10,8 @@
 set -euo pipefail
 
 APP_DIR="/opt/trenchable"
-REPO_URL="https://github.com/YOUR_USERNAME/trenchable.git"   # <-- set this
-BRANCH="main"
+REPO_URL="https://github.com/trenchabledevs/trenchable.git"
+BRANCH="master"
 IMAGE_NAME="trenchable-api"
 CONTAINER_NAME="trenchable-api"
 DATA_DIR="/opt/trenchable-data"
