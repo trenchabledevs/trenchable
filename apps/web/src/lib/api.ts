@@ -1,6 +1,6 @@
 import type { ScanResponse, ExtendedScanResponse, HealthResponse, ScanHistoryEntry, WatchlistEntry, ComparisonData } from '@trenchable/shared';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL ?? '') + '/api';
 
 async function fetchJSON<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${url}`, {
