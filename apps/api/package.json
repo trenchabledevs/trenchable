@@ -19,12 +19,12 @@
     "@solana/spl-token": "^0.4.12",
     "better-sqlite3": "^12.6.2",
     "bs58": "^6.0.0",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.13.4",
-    "typescript": "^5.7.3",
-    "tsx": "^4.19.2"
+    "typescript": "^5.7.3"
   }
 }
