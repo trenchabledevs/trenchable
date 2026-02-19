@@ -17,7 +17,7 @@ import { saveScanToHistory } from '../db/history.js';
 import { saveLaunchSignals } from './token-tracker.service.js';
 
 // External API clients
-import { getAsset, extractTokenMeta, type HeliusAsset } from './external/helius.js';
+import { getAsset, extractTokenMeta, getOnChainMetadataUri, fetchMetadataFromUri, type HeliusAsset } from './external/helius.js';
 import { getGoPlusTokenSecurity, extractGoPlusRiskFlags, extractGoPlusTrustSignals, type GoPlusResult } from './external/goplus.js';
 import { getDexScreenerData, type DexScreenerData } from './external/dexscreener.js';
 import { getRugcheckReport, extractRugcheckRisks, extractLpLockData, type RugcheckReport } from './external/rugcheck.js';
@@ -39,13 +39,19 @@ export async function runInstantScan(tokenMintStr: string): Promise<ExtendedScan
 
   // Single parallel phase — all external APIs + one getMint RPC call
   // No sleeps, no batches, no additional RPC
-  const [mintInfoResult, heliusAsset, goPlusData, dexData, rugcheckReport] = await Promise.all([
+  const [mintInfoResult, heliusAsset, goPlusData, dexData, rugcheckReport, onChainMetaUri] = await Promise.all([
     getMint(connection, tokenMint).catch(() => undefined),
     getAsset(tokenMintStr),
     getGoPlusTokenSecurity(tokenMintStr),
     getDexScreenerData(tokenMintStr),
     getRugcheckReport(tokenMintStr),
+    getOnChainMetadataUri(tokenMintStr),
   ]);
+
+  // For new tokens not indexed by Helius DAS, fetch metadata JSON from on-chain URI
+  const offChainMeta = (!heliusAsset && onChainMetaUri)
+    ? await fetchMetadataFromUri(onChainMetaUri)
+    : null;
 
   // Detect platform from external data (no RPC needed)
   const platform = detectPlatformFromExternal(rugcheckReport, dexData, tokenMintStr);
@@ -58,7 +64,7 @@ export async function runInstantScan(tokenMintStr: string): Promise<ExtendedScan
   const honeypotResult = deriveHoneypot(goPlusData);
   const tokenTaxResult = deriveTokenTax(rugcheckReport, goPlusData);
   const devWalletResult = deriveDevWallet(goPlusData);
-  const socialResult = deriveSocialSentiment(dexData, rugcheckReport);
+  const socialResult = deriveSocialSentiment(dexData, rugcheckReport, offChainMeta);
   const rugPatternResult = deriveRugPattern(rugcheckReport, goPlusData, heliusAsset, dexData);
 
   const checks: RiskCheckResult[] = [
@@ -76,12 +82,12 @@ export async function runInstantScan(tokenMintStr: string): Promise<ExtendedScan
   // Calculate score with instant weights
   const overallScore = calculateInstantScore(checks);
 
-  // Extract metadata
+  // Extract metadata — priority: Helius DAS > off-chain URI > GoPlus > DexScreener
   const heliusMeta = heliusAsset ? extractTokenMeta(heliusAsset) : null;
-  const tokenImage = heliusMeta?.image || dexData?.imageUrl || null;
-  const tokenName = heliusMeta?.name || dexData?.pairs?.[0]?.baseToken?.name || null;
-  const tokenSymbol = heliusMeta?.symbol || dexData?.pairs?.[0]?.baseToken?.symbol || null;
-  const tokenDescription = heliusMeta?.description || null;
+  const tokenImage = heliusMeta?.image || offChainMeta?.image || dexData?.imageUrl || null;
+  const tokenName = heliusMeta?.name || offChainMeta?.name || goPlusData?.metadata?.name || goPlusData?.token_name || dexData?.pairs?.[0]?.baseToken?.name || null;
+  const tokenSymbol = heliusMeta?.symbol || offChainMeta?.symbol || goPlusData?.metadata?.symbol || goPlusData?.token_symbol || dexData?.pairs?.[0]?.baseToken?.symbol || null;
+  const tokenDescription = heliusMeta?.description || offChainMeta?.description || null;
 
   // Build market data
   let market: TokenMarketData | null = null;
@@ -118,8 +124,16 @@ export async function runInstantScan(tokenMintStr: string): Promise<ExtendedScan
     };
   }
 
+  // Socials: DexScreener is primary; fall back to off-chain metadata JSON (pump.fun tokens embed these)
   const socials = dexData?.socials || [];
   const websites = dexData?.websites || [];
+  if (offChainMeta && socials.length === 0) {
+    if (offChainMeta.twitter) socials.push({ type: 'twitter', url: offChainMeta.twitter });
+    if (offChainMeta.telegram) socials.push({ type: 'telegram', url: offChainMeta.telegram });
+  }
+  if (offChainMeta?.website && websites.length === 0) {
+    websites.push(offChainMeta.website);
+  }
 
   // MC prediction
   const mcPrediction = computeMCPrediction(dexData, goPlusData, rugcheckReport);
@@ -596,13 +610,14 @@ function deriveDevWallet(goplus: GoPlusResult | null): RiskCheckResult {
 
 function deriveSocialSentiment(
   dexData: DexScreenerData | null,
-  rugcheck: RugcheckReport | null
+  rugcheck: RugcheckReport | null,
+  offChainMeta?: { twitter?: string; telegram?: string; website?: string } | null
 ): RiskCheckResult {
   const w = INSTANT_RISK_WEIGHTS.SOCIAL_SENTIMENT;
 
-  const hasTwitter = dexData?.socials?.some(s => s.type === 'twitter') || false;
-  const hasTelegram = dexData?.socials?.some(s => s.type === 'telegram') || false;
-  const hasWebsite = (dexData?.websites?.length || 0) > 0;
+  const hasTwitter = dexData?.socials?.some(s => s.type === 'twitter') || !!offChainMeta?.twitter || false;
+  const hasTelegram = dexData?.socials?.some(s => s.type === 'telegram') || !!offChainMeta?.telegram || false;
+  const hasWebsite = (dexData?.websites?.length || 0) > 0 || !!offChainMeta?.website || false;
   const isVerified = rugcheck?.verification?.jup_verified === true;
 
   const socialCount = [hasWebsite, hasTwitter, hasTelegram].filter(Boolean).length;

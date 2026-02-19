@@ -44,6 +44,62 @@ export async function getAsset(mint: string): Promise<HeliusAsset | null> {
   }
 }
 
+/**
+ * Fetch token metadata JSON from a URI (e.g. pump.fun IPFS/CDN metadata).
+ * Used as fallback for brand new tokens not yet indexed by Helius DAS.
+ */
+export interface TokenMetadataJson {
+  name?: string;
+  symbol?: string;
+  description?: string;
+  image?: string;
+  twitter?: string;
+  telegram?: string;
+  website?: string;
+}
+
+export async function fetchMetadataFromUri(uri: string): Promise<TokenMetadataJson | null> {
+  if (!uri) return null;
+  try {
+    // Resolve IPFS URIs
+    const url = uri.startsWith('ipfs://')
+      ? uri.replace('ipfs://', 'https://ipfs.io/ipfs/')
+      : uri;
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    const json = await res.json() as TokenMetadataJson;
+    return json;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get on-chain Metaplex metadata URI for a mint via Helius RPC.
+ * Works for brand new tokens even before they're indexed by DAS.
+ */
+export async function getOnChainMetadataUri(mint: string): Promise<string | null> {
+  try {
+    const rpcUrl = config.rpc.primary || config.rpc.fallback;
+    const res = await fetch(rpcUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: '1',
+        method: 'getTokenMetadata',
+        params: [mint],
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const json = await res.json() as { result?: { uri?: string } };
+    return json.result?.uri || null;
+  } catch {
+    return null;
+  }
+}
+
 export function extractTokenImage(asset: HeliusAsset): string | null {
   // Priority: links.image > files[0].cdn_uri > files[0].uri
   if (asset.content?.links?.image) return asset.content.links.image;

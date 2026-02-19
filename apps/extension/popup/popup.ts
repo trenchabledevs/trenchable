@@ -100,7 +100,8 @@ function renderResult(result: ScanResult) {
     imageEl.style.display = 'none';
   }
 
-  setText('token-name', result.tokenName || 'Unknown');
+  const displayName = result.tokenName || (result.tokenSymbol ? result.tokenSymbol : null) || shortenMint(result.tokenMint);
+  setText('token-name', displayName);
   setText('token-symbol', result.tokenSymbol ? `$${result.tokenSymbol}` : '');
   setText('token-platform', result.platform || '');
 
@@ -275,4 +276,9 @@ function formatPrice(price: number): string {
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function shortenMint(mint: string): string {
+  if (!mint || mint.length < 12) return mint || 'Unknown';
+  return `${mint.slice(0, 4)}...${mint.slice(-4)}`;
 }

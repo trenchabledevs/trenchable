@@ -14,14 +14,15 @@
     "https://pump.fun/*",
     "https://photon-sol.tinyastro.io/*",
     "https://bullx.io/*",
-    "https://dexscreener.com/*"
+    "https://dexscreener.com/*",
+    "http://localhost/*"
   ],
   "background": {
     "service_worker": "background/service-worker.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://axiom.trade/meme/*", "https://axiom.trade/t/*"],
+      "matches": ["https://axiom.trade/*"],
       "js": ["content/axiom.js"],
       "run_at": "document_idle"
     },
