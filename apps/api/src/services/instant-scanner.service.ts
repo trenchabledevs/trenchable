@@ -48,9 +48,17 @@ export async function runInstantScan(tokenMintStr: string): Promise<ExtendedScan
     getOnChainMetadataUri(tokenMintStr),
   ]);
 
-  // For new tokens not indexed by Helius DAS, fetch metadata JSON from on-chain URI
-  const offChainMeta = (!heliusAsset && onChainMetaUri)
-    ? await fetchMetadataFromUri(onChainMetaUri)
+  // Fetch off-chain metadata JSON from on-chain URI whenever it exists.
+  // Used as fallback for: (a) tokens not yet indexed by Helius DAS, and
+  // (b) tokens where DAS has the asset but lacks name/image/socials (common for brand-new tokens).
+  const heliusMeta = heliusAsset ? extractTokenMeta(heliusAsset) : null;
+  const needsOffChain = onChainMetaUri && (
+    !heliusAsset ||
+    !heliusMeta?.name ||
+    !heliusMeta?.image
+  );
+  const offChainMeta = needsOffChain
+    ? await fetchMetadataFromUri(onChainMetaUri!)
     : null;
 
   // Detect platform from external data (no RPC needed)
@@ -83,7 +91,6 @@ export async function runInstantScan(tokenMintStr: string): Promise<ExtendedScan
   const overallScore = calculateInstantScore(checks);
 
   // Extract metadata — priority: Helius DAS > off-chain URI > GoPlus > DexScreener
-  const heliusMeta = heliusAsset ? extractTokenMeta(heliusAsset) : null;
   const tokenImage = heliusMeta?.image || offChainMeta?.image || dexData?.imageUrl || null;
   const tokenName = heliusMeta?.name || offChainMeta?.name || goPlusData?.metadata?.name || goPlusData?.token_name || dexData?.pairs?.[0]?.baseToken?.name || null;
   const tokenSymbol = heliusMeta?.symbol || offChainMeta?.symbol || goPlusData?.metadata?.symbol || goPlusData?.token_symbol || dexData?.pairs?.[0]?.baseToken?.symbol || null;
@@ -333,6 +340,16 @@ function deriveLPStatus(
 
   const rugcheckLp = rugcheck ? extractLpLockData(rugcheck) : null;
   const liquidityUsd = dexData?.liquidity || rugcheckLp?.totalLiquidity || null;
+
+  // pump.fun bonding curve tokens have no LP pool — liquidity is managed by the bonding curve program
+  // This is safe by design; flag as warning (not danger) with informative message
+  if (rugcheck?.tokenType === 'pump.fun' && !rugcheckLp) {
+    const liqStr = liquidityUsd ? ` ($${liquidityUsd.toLocaleString()} in curve)` : '';
+    return makeCheck('LP_STATUS', 'warning', 30, w,
+      `Bonding curve token — no LP pool yet${liqStr}. LP created at graduation (~85 SOL)`,
+      { liquidityUsd, bondingCurve: true }
+    );
+  }
 
   if (rugcheckLp) {
     const totalSecured = rugcheckLp.lpLockedPct + rugcheckLp.lpBurnedPct;
